@@ -34,6 +34,7 @@ type defaultValidator struct {
 
 var _ binding.StructValidator = &defaultValidator{}
 var defaultLocale = "en"
+var translator ut.Translator
 
 // ValidateStruct receives any kind of type, but only performed struct or pointer to struct type.
 func (v *defaultValidator) ValidateStruct(obj interface{}) error {
@@ -131,5 +132,6 @@ func (v *defaultValidator) getTrans(locale string) ut.Translator {
 		locale = "en"
 	}
 	trans, _ := uni.GetTranslator(locale)
+	translator = trans
 	return trans
 }

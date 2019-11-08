@@ -67,9 +67,9 @@ func WithClientContext(ctx context.Context) Option {
 // WithVaidatorV9 - set validator v9
 // supported locale:en,fr,id,ja,nl,pt_BR,tr,zh,zh_tw;default en
 func WithVaidatorV9(locale string) Option {
+	defaultLocale = locale
+	binding.Validator = new(defaultValidator)
 	return func(opts *Options) {
-		defaultLocale = locale
-		binding.Validator = new(defaultValidator)
 		opts.useValidatorV9 = true
 	}
 }
@@ -182,7 +182,6 @@ func (r *Router) addInterface(inter Interface) {
 						return
 					}
 					for _, e := range v {
-
 						structField, ok := pType.FieldByName(e.Field())
 						if !ok {
 							continue
@@ -190,8 +189,7 @@ func (r *Router) addInterface(inter Interface) {
 
 						errmsg := structField.Tag.Get(r.errTagPrefix + e.Tag())
 						if errmsg == "" {
-
-							errmsg = e.Translate(nil)
+							errmsg = e.Translate(translator)
 						}
 						fieldTag := fieldTagName(tagType, structField)
 						errMap[fieldTag] = errmsg

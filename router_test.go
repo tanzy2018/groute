@@ -76,6 +76,7 @@ func (r routerTestObj) add(group string, route interface{}, middleware ...gin.Ha
 		})
 		testEngin = engin
 	}
+
 	api := NewRouter(
 		WithRouter(engin.Group(group)),
 		WithMiddlerware(middleware...),
@@ -235,12 +236,12 @@ func TestRouterMethod(t *testing.T) {
 	defer res3.Close()
 	assert.Equal(t, true, res3.Ok)
 	assert.Equal(t, "path:/router-method;method:DELETE;name:Lin", res3.String())
-
 }
 
 func TestRouterParamValidate(t *testing.T) {
 	type Hit struct {
-		Lin       string `form:"lin" json:"lin" binding:"required" err-required:"lin is required"`
+		// Lin       string `form:"lin" json:"lin" binding:"required" err-required:"lin is required"`
+		Lin       string `form:"lin" json:"lin" binding:"required"`
 		Tan       string `form:"tan" json:"tan" binding:"required" err-required:"tan is required"`
 		Heartbeat int32  `form:"heartbeat" json:"heartbeat" binding:"min=1" err-min:"heartbeat must be greater than 0"`
 	}
@@ -283,7 +284,7 @@ func TestRouterParamValidate(t *testing.T) {
 	expected := map[string]interface{}{
 		"code": float64(402),
 		"msg": []interface{}{
-			"lin is required",
+			"Lin为必填字段",
 			"tan is required",
 			"heartbeat must be greater than 0"},
 		"state": float64(0),
@@ -291,7 +292,7 @@ func TestRouterParamValidate(t *testing.T) {
 	expectedMap := map[string]interface{}{
 		"code": float64(402),
 		"msg": map[string]interface{}{
-			"lin":       "lin is required",
+			"lin":       "Lin为必填字段",
 			"tan":       "tan is required",
 			"heartbeat": "heartbeat must be greater than 0"},
 		"state": float64(0),
@@ -315,6 +316,7 @@ func TestRouterParamValidate(t *testing.T) {
 		assert.Equal(t, expectedMap, atual)
 	}
 }
+
 func TestRouterMiddleware(t *testing.T) {
 	hd := NewInterface(
 		Interface{
