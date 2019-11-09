@@ -730,7 +730,7 @@ func TestBlank(t *testing.T) {
 	if err == nil {
 		resp.Body.Close()
 	}
-	assert.Equal(t, 0, time.Since(now).Microseconds())
+	fmt.Println("time of TestBlank:", time.Since(now).Microseconds())
 }
 
 func TestGinBlank(t *testing.T) {
@@ -747,5 +747,5 @@ func TestGinBlank(t *testing.T) {
 	if err == nil {
 		resp.Body.Close()
 	}
-	assert.Equal(t, 0, time.Since(now).Microseconds())
+	fmt.Println("time of TestGinBlank:", time.Since(now).Microseconds())
 }

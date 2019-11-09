@@ -52,7 +52,7 @@ type Interface struct {
 }
 
 // NewInterface - create a new Interface instance.
-func NewInterface(inter Interface, handler func(c *Context)) Interface {
-	inter.Handle = handler
+func NewInterface(inter Interface, handle func(c *Context)) Interface {
+	inter.Handle = handle
 	return inter
 }

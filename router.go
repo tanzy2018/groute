@@ -43,12 +43,12 @@ type Option func(*Options)
 
 // Options - option config to initailize the router.
 type Options struct {
-	router         gin.IRouter
-	middleware     []gin.HandlerFunc
-	errHandle      ErrHandle
-	errTagPrefix   string
-	clientContext  context.Context
-	useValidatorV9 bool
+	router           gin.IRouter
+	middleware       []gin.HandlerFunc
+	errHandle        ErrHandle
+	errTagPrefix     string
+	clientContext    context.Context
+	validatorVersion string
 }
 
 // WithRouter - set the route.
@@ -75,7 +75,10 @@ func WithErrHandle(errHandle ErrHandle) Option {
 // WithErrMsgTagPrefix - set the errprefix tag which define the error hints.
 func WithErrMsgTagPrefix(prefix string) Option {
 	return func(opts *Options) {
-		opts.errTagPrefix = prefix + "-"
+		if prefix != "" {
+			opts.errTagPrefix = prefix + "-"
+		}
+
 	}
 }
 
@@ -92,7 +95,7 @@ func WithVaidatorV9(locale string) Option {
 	defaultLocale = locale
 	binding.Validator = new(defaultValidator)
 	return func(opts *Options) {
-		opts.useValidatorV9 = true
+		opts.validatorVersion = "v9"
 	}
 }
 
@@ -150,22 +153,17 @@ type Router struct {
 
 // NewRouter create a new router
 func NewRouter(options ...Option) Router {
-	opts := &Options{}
+	opts := &Options{
+		errHandle:        defaulErrHandle,
+		errTagPrefix:     "err-",
+		validatorVersion: "v8",
+	}
 	for _, op := range options {
 		op(opts)
 	}
 	if opts.router == nil {
 		panic("gin router must be set and not be nil")
 	}
-
-	if opts.errHandle == nil {
-		opts.errHandle = defaulErrHandle
-	}
-
-	if opts.errTagPrefix == "" {
-		opts.errTagPrefix = "err-"
-	}
-
 	return Router{
 		opts,
 	}
@@ -189,61 +187,65 @@ func (r *Router) addInterface(inter Interface) {
 
 		if inter.Param != nil {
 			req.Param = reflect.New(reflect.TypeOf(inter.Param)).Interface()
-		}
-
-		if inter.Param != nil {
 			if err := c.ShouldBind(req.Param); err != nil {
 				var errMap map[string]string
+
+				switch r.validatorVersion {
 				// handle validator v9
-				if v, ok := err.(validator.ValidationErrors); ok && r.useValidatorV9 {
-					pType := reflect.TypeOf(inter.Param)
-					errMap = make(map[string]string, len(v))
-					tagType := getTagByContentType(c.GetHeader("Content-Type"))
-					if tagType == "" {
-						req.ErrHandle(req, fmt.Sprintf("unsupported Content-Type:%s", c.GetHeader("Content-Type")))
-						return
-					}
-					for _, e := range v {
-						structField, ok := pType.FieldByName(e.Field())
-						if !ok {
-							continue
+				case "v9":
+					if v, ok := err.(validator.ValidationErrors); ok {
+						pType := reflect.TypeOf(inter.Param)
+						errMap = make(map[string]string, len(v))
+						tagType := getTagByContentType(c.GetHeader("Content-Type"))
+						if tagType == "" {
+							req.ErrHandle(req, fmt.Sprintf("unsupported Content-Type:%s", c.GetHeader("Content-Type")))
+							return
 						}
+						for _, e := range v {
+							structField, ok := pType.FieldByName(e.Field())
+							if !ok {
+								continue
+							}
 
-						errmsg := structField.Tag.Get(r.errTagPrefix + e.Tag())
-						if errmsg == "" {
-							errmsg = e.Translate(translator)
+							errmsg := structField.Tag.Get(r.errTagPrefix + e.Tag())
+							if errmsg == "" {
+								errmsg = e.Translate(translator)
+							}
+							fieldTag := fieldTagName(tagType, structField)
+							errMap[fieldTag] = errmsg
 						}
-						fieldTag := fieldTagName(tagType, structField)
-						errMap[fieldTag] = errmsg
 					}
-				}
-				// handle validator v8
-				if v, ok := err.(validatorv8.ValidationErrors); ok && !r.useValidatorV9 {
-					pType := reflect.TypeOf(inter.Param)
-					errMap = make(map[string]string, len(v))
-					tagType := getTagByContentType(c.GetHeader("Content-Type"))
-					if tagType == "" {
-						req.ErrHandle(req, fmt.Sprintf("unsupported Content-Type:%s", c.GetHeader("Content-Type")))
-						return
-					}
-					for _, e := range v {
-
-						structField, ok := pType.FieldByName(e.Field)
-						if !ok {
-							continue
+				// handle validator v8 same as default.
+				case "v8":
+					fallthrough
+				default:
+					if v, ok := err.(validatorv8.ValidationErrors); ok {
+						pType := reflect.TypeOf(inter.Param)
+						errMap = make(map[string]string, len(v))
+						tagType := getTagByContentType(c.GetHeader("Content-Type"))
+						if tagType == "" {
+							req.ErrHandle(req, fmt.Sprintf("unsupported Content-Type:%s", c.GetHeader("Content-Type")))
+							return
 						}
+						for _, e := range v {
 
-						errmsg := structField.Tag.Get(r.errTagPrefix + e.Tag)
-						if errmsg == "" {
-							errmsg = fmt.Sprintf(
-								"param '%s' with value '%v' failed on the validation tag '%s'",
-								fieldTagName(tagType, structField),
-								e.Value,
-								e.Tag,
-							)
+							structField, ok := pType.FieldByName(e.Field)
+							if !ok {
+								continue
+							}
+
+							errmsg := structField.Tag.Get(r.errTagPrefix + e.Tag)
+							if errmsg == "" {
+								errmsg = fmt.Sprintf(
+									"param '%s' with value '%v' failed on the validation tag '%s'",
+									fieldTagName(tagType, structField),
+									e.Value,
+									e.Tag,
+								)
+							}
+							fieldTag := fieldTagName(tagType, structField)
+							errMap[fieldTag] = errmsg
 						}
-						fieldTag := fieldTagName(tagType, structField)
-						errMap[fieldTag] = errmsg
 					}
 				}
 				if len(errMap) != 0 {
