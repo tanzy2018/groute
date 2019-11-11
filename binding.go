@@ -38,15 +38,15 @@ import (
 	zhongwenTW "github.com/go-playground/locales/zh_Hant_TW"
 	ut "github.com/go-playground/universal-translator"
 	"gopkg.in/go-playground/validator.v9"
-	enlocale "gopkg.in/go-playground/validator.v9/translations/en"
-	frlocale "gopkg.in/go-playground/validator.v9/translations/fr"
-	idlocale "gopkg.in/go-playground/validator.v9/translations/id"
-	jalocale "gopkg.in/go-playground/validator.v9/translations/ja"
-	nllocale "gopkg.in/go-playground/validator.v9/translations/nl"
-	ptBRlocale "gopkg.in/go-playground/validator.v9/translations/pt_BR"
-	trlocale "gopkg.in/go-playground/validator.v9/translations/tr"
-	zhlocale "gopkg.in/go-playground/validator.v9/translations/zh"
-	zhTWlocale "gopkg.in/go-playground/validator.v9/translations/zh_tw"
+	en_trans "gopkg.in/go-playground/validator.v9/translations/en"
+	fr_trans "gopkg.in/go-playground/validator.v9/translations/fr"
+	id_trans "gopkg.in/go-playground/validator.v9/translations/id"
+	ja_trans "gopkg.in/go-playground/validator.v9/translations/ja"
+	nl_trans "gopkg.in/go-playground/validator.v9/translations/nl"
+	ptBR_trans "gopkg.in/go-playground/validator.v9/translations/pt_BR"
+	tr_trans "gopkg.in/go-playground/validator.v9/translations/tr"
+	zh_trans "gopkg.in/go-playground/validator.v9/translations/zh"
+	zhTW_trans "gopkg.in/go-playground/validator.v9/translations/zh_tw"
 )
 
 type defaultValidator struct {
@@ -100,26 +100,26 @@ func (v *defaultValidator) registerTranslations(
 	locale string, validate *validator.Validate, trans ut.Translator) error {
 	switch locale {
 	case "en":
-		return enlocale.RegisterDefaultTranslations(validate, trans)
+		return en_trans.RegisterDefaultTranslations(validate, trans)
 	case "zh":
-		return zhlocale.RegisterDefaultTranslations(validate, trans)
+		return zh_trans.RegisterDefaultTranslations(validate, trans)
 	case "zh_tw":
-		return zhTWlocale.RegisterDefaultTranslations(validate, trans)
+		return zhTW_trans.RegisterDefaultTranslations(validate, trans)
 	case "fr":
-		return frlocale.RegisterDefaultTranslations(validate, trans)
+		return fr_trans.RegisterDefaultTranslations(validate, trans)
 	case "ja":
-		return jalocale.RegisterDefaultTranslations(validate, trans)
+		return ja_trans.RegisterDefaultTranslations(validate, trans)
 	case "id":
-		return idlocale.RegisterDefaultTranslations(validate, trans)
+		return id_trans.RegisterDefaultTranslations(validate, trans)
 	case "nl":
-		return nllocale.RegisterDefaultTranslations(validate, trans)
+		return nl_trans.RegisterDefaultTranslations(validate, trans)
 	case "pt_BR":
-		return ptBRlocale.RegisterDefaultTranslations(validate, trans)
+		return ptBR_trans.RegisterDefaultTranslations(validate, trans)
 	case "tr":
-		return trlocale.RegisterDefaultTranslations(validate, trans)
+		return tr_trans.RegisterDefaultTranslations(validate, trans)
 	// default :en
 	default:
-		return enlocale.RegisterDefaultTranslations(validate, trans)
+		return en_trans.RegisterDefaultTranslations(validate, trans)
 	}
 }
 
